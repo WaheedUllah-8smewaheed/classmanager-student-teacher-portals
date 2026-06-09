@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: classmanager-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: classmanager-app
+  template:
+    metadata:
+      labels:
+        app: classmanager-app
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command: ['sh', '-c', 'until nc -z 10.244.1.5 3306; do echo waiting for mysql; sleep 3; done']
+      containers:
+        - name: classmanager-app
+          image: meops/classmanager-app:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: classmanager-config
+                  key: DB_HOST
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: classmanager-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: classmanager-config
+                  key: DB_USER
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: classmanager-config
+                  key: PORT
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: classmanager-secret
+                  key: DB_PASSWORD
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: classmanager-secret
+                  key: SECRET
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10

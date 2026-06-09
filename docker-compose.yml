@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: classmanager_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "Pakistan@321#$"
+      MYSQL_DATABASE: classmanager
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: classmanager_app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: "3000"
+      SECRET: "mysupersecretkey123"
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: "Pakistan@321#$"
+      DB_NAME: classmanager
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  mysql_data:

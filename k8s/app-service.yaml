@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: classmanager-service
+spec:
+  selector:
+    app: classmanager-app
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30000
